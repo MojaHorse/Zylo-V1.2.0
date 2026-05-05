@@ -56,12 +56,16 @@ Deno.serve(async (req) => {
     }
 
     if (!staffMembers || staffMembers.length === 0) {
-       console.error(`❌ CRITICAL: No active 'owner' or 'manager' found in business_members for ID: ${record.business_id}`)
-       // This likely means the Trigger I gave you earlier hasn't run for this business yet.
-       throw new Error('No staff found')
+       console.log(`⚠️ No active 'owner' or 'manager' found in business_members for ID: ${record.business_id}. Skipping alert.`)
+       return new Response(JSON.stringify({ message: 'No staff to notify' }), { headers: corsHeaders })
     }
 
-    const userIds = staffMembers.map(s => s.user_id)
+    const userIds = staffMembers.map(s => s.user_id).filter(id => id !== null)
+    if (userIds.length === 0) {
+      console.log(`⚠️ Staff found, but user_id is null. Skipping alert.`)
+      return new Response(JSON.stringify({ message: 'Staff not fully registered' }), { headers: corsHeaders })
+    }
+    
     console.log(`👥 Found ${userIds.length} staff members (Owners/Managers) to notify.`)
 
     // 5. Get Push Tokens
@@ -71,19 +75,26 @@ Deno.serve(async (req) => {
       .in('user_id', userIds)
 
     if (!tokens || tokens.length === 0) {
-      console.error(`❌ Users found, but no Push Tokens registered. They need to open the app on a phone.`)
+      console.log(`⚠️ Users found, but no Push Tokens registered.`)
       return new Response(JSON.stringify({ message: 'No devices registered' }), { headers: corsHeaders })
     }
 
-    console.log(`📲 Sending to ${tokens.length} devices...`)
+    // Deduplicate tokens
+    const uniqueTokens = [...new Set(tokens.map(t => t.token))]
+
+    console.log(`📲 Sending to ${uniqueTokens.length} unique devices...`)
 
     // 6. Send to Expo
-    const notifications = tokens.map((t) => ({
-      to: t.token,
+    const notifications = uniqueTokens.map((token) => ({
+      to: token,
       sound: 'default',
       title: '⚠️ Low Stock Alert',
       body: `${record.name} is running low! (${record.quantity} ${record.unit} left)`,
-      data: { productId: record.id },
+      data: { 
+          type: 'low_stock',
+          businessId: record.business_id,
+          inventoryItemId: record.id 
+      },
     }))
 
     const expoRes = await fetch('https://exp.host/--/api/v2/push/send', {
@@ -99,7 +110,11 @@ Deno.serve(async (req) => {
     const expoData = await expoRes.json()
     console.log("📨 Expo Response:", JSON.stringify(expoData))
 
-    return new Response(JSON.stringify({ message: 'Notifications sent!' }), {
+    if (expoData.errors) {
+        console.error("❌ Expo Errors:", expoData.errors)
+    }
+
+    return new Response(JSON.stringify({ message: 'Notifications sent!', data: expoData }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
 

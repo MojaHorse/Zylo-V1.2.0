@@ -30,7 +30,7 @@ interface Props {
 
 export default function InventoryFormModal({ visible, onClose, onSaved, initialData }: Props) {
     const { selectedBusiness: business } = useBusiness();
-    const { userRole } = useAuth(); // 'cashier' | 'manager' | 'owner'
+    const userRole = business?.role ?? 'cashier';
 
     // Form State
     const [name, setName] = useState("");

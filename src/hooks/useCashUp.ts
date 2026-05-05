@@ -61,24 +61,25 @@ export function useCashUp() {
             setOpeningFloat(shift.opening_float || 0);
 
             // 3. Calculate Sales since Shift Started
-            // We fetch all transactions created AFTER the shift opened
-            const { data: transactions } = await supabase
-                .from('transactions')
-                .select('amount, payment_method') // assuming 'payment_method' is 'cash' or 'card'
+            // We fetch all orders created AFTER the shift opened
+            const { data: orders, error: ordersError } = await supabase
+                .from('orders')
+                .select('grand_total, payment_method')
                 .eq('business_id', selectedBusiness!.id)
-                .eq('staff_id', member.id) // Only my sales
+                .eq('staff_id', member.id)
+                .is('voided_at', null)
                 .gte('created_at', shift.opened_at);
+                
+            if (ordersError) throw ordersError;
 
             // Sum them up
             let cashTotal = 0;
             let cardTotal = 0;
 
-            if (transactions) {
-                transactions.forEach((t: any) => {
-                    if (t.payment_method === 'cash') cashTotal += t.amount;
-                    if (t.payment_method === 'card') cardTotal += t.amount;
-                });
-            }
+            orders?.forEach((order: any) => {
+                if (order.payment_method === 'Cash') cashTotal += Number(order.grand_total || 0);
+                if (order.payment_method === 'Card') cardTotal += Number(order.grand_total || 0);
+            });
 
             setSystemCash(cashTotal);
             setSystemCard(cardTotal);

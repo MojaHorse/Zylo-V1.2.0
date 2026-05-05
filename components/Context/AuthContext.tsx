@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // 1. Update Context Type
 export type ActiveStaff = {
     id: string;
+    business_id: string;
     staff_number: string;
     role: 'owner' | 'manager' | 'cashier';
     full_name: string;
@@ -106,7 +107,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const staffLogin = async (staffNumber: string, pin: string, businessId?: string) => {
         try {
+            if (!businessId) {
+                return { success: false, error: 'No business selected.' };
+            }
             const { data, error } = await supabase.rpc('login_staff', {
+                input_business_id: businessId,
                 input_staff_number: staffNumber,
                 input_pin: pin
             });
@@ -121,9 +126,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if (businessId) {
                 const { data: memberCheck, error: memberErr } = await supabase
                     .from('business_members')
-                    .select('id, role, staff_number, profiles(full_name)')
+                    .select('id, role, staff_number, full_name, profiles(full_name)')
                     .eq('staff_number', staffNumber)
                     .eq('business_id', businessId)
+                    .eq('is_active', true)
                     .single();
 
                 if (memberErr || !memberCheck) {
@@ -132,9 +138,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
                 await setActiveStaff({
                     id: memberCheck.id,
+                    business_id: businessId,
                     staff_number: memberCheck.staff_number,
                     role: memberCheck.role as any,
-                    full_name: (memberCheck.profiles as any)?.full_name || 'Staff'
+                    full_name: memberCheck.full_name || (memberCheck.profiles as any)?.full_name || 'Staff'
                 });
             }
 

@@ -10,7 +10,7 @@ import { generateInventoryReport } from '../utils/reporting'; // 👈 Import
 
 export const useInventoryLogic = () => {
     const { selectedBusiness: business } = useBusiness();
-    const { userRole } = useAuth();
+    const userRole = business?.role ?? 'cashier';
     const { showToast } = useToast(); // 👈 Hook
 
     // Data State

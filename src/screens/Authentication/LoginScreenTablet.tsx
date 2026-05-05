@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Pressable, Image, ActivityIndicator } from 'react-native';
+import { View, Text, Pressable, Image, ActivityIndicator, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import tw from 'twrnc';
 import { ArrowLeft, Store } from 'lucide-react-native';
@@ -85,7 +85,21 @@ export default function LoginScreenTablet() {
                         </View>
                     ))}
                     <View style={tw`flex-row justify-between w-full`}>
-                        <View style={tw`w-24 h-24`} />
+                        <Pressable 
+                            onPress={() => {
+                                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+                                Alert.alert(
+                                    step === 1 ? 'Forgot ID?' : 'Forgot PIN?', 
+                                    'Please ask your manager to check or reset your credentials.'
+                                );
+                            }}
+                            style={({ pressed }) => [
+                                tw`w-24 h-24 rounded-full items-center justify-center transition-all`,
+                                pressed && tw`bg-slate-100 scale-95`
+                            ]}
+                        >
+                            <Text style={tw`text-slate-400 text-lg font-bold text-center`}>{step === 1 ? 'Forgot\nID?' : 'Forgot\nPIN?'}</Text>
+                        </Pressable>
                         <Pressable 
                             onPress={() => onKeyPress('0')} 
                             disabled={loading} 

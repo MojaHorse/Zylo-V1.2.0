@@ -9,7 +9,7 @@ import {
     FlatList,
 } from "react-native";
 import tw from "twrnc";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../lib/supabase";
 
 export default function AddInventoryModal({ visible, onClose, onSaved }) {
     const [name, setName] = useState("");

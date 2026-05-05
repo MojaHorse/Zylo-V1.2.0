@@ -58,7 +58,7 @@ export const usePushNotifications = () => {
             user_id: user.id, 
             token: token,
             device_name: Device.modelName || 'Unknown Device',
-            updated_at: new Date()
+            updated_at: new Date().toISOString()
         }, { onConflict: 'user_id, token' });
 
     if (error) console.error("❌ Failed to save push token:", error.message);

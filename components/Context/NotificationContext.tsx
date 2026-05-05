@@ -41,31 +41,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     useEffect(() => {
         if (!user) return;
 
-        console.log("Registering for push notifications...");
-        registerForPushNotificationsAsync().then(token => {
-            if (token) {
-                // Save Push token to supabase so our edge function can find it
-                const saveToken = async () => {
-                    // Check if token already exists to avoid duplicate constraint errors
-                    const { data: existing } = await supabase
-                        .from('user_push_tokens')
-                        .select('id')
-                        .eq('token', token)
-                        .single();
-
-                    if (!existing) {
-                        const { error } = await supabase.from('user_push_tokens').insert({
-                            user_id: user.id,
-                            token: token
-                        });
-                        
-                        if (error) console.error("Error saving push token to DB:", error);
-                    }
-                };
-                
-                saveToken();
-            }
-        });
+        // Push token registration moved to usePushNotifications.ts
 
         // Listen for incoming notifications while the app is actively open
         notificationListener.current = Notifications.addNotificationReceivedListener(notification => {

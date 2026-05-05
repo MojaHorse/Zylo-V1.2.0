@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, FlatList, ActivityIndicator, ScrollView, Pressable, TextInput, Alert } from 'react-native';
 import tw from 'twrnc';
 import {
@@ -21,6 +21,9 @@ export default function SalesHistoryMobile() {
         sortBy, setSortBy,
         dateFilter, setDateFilter
     } = useSalesHistoryLogic(true);
+
+    // Snapshot of order data for the receipt modal (survives closing the detail modal)
+    const [receiptData, setReceiptData] = useState<{ order: any; items: any[] } | null>(null);
 
     // --- Computed Stats ---
     const stats = useMemo(() => {
@@ -255,7 +258,12 @@ export default function SalesHistoryMobile() {
                 items={orderItems}
                 loadingDetails={loadingDetails}
                 onRefund={handleRefund}
-                onViewReceipt={() => setShowReceipt(true)}
+                onViewReceipt={() => {
+                    // Snapshot the data before closing the detail modal
+                    setReceiptData({ order: selectedOrder, items: [...orderItems] });
+                    setSelectedOrder(null);
+                    setTimeout(() => setShowReceipt(true), 400);
+                }}
                 formatDate={formatDate}
                 formatTime={formatTime}
                 getPaymentIcon={getPaymentIcon}
@@ -264,9 +272,12 @@ export default function SalesHistoryMobile() {
 
             <ReceiptModal 
                 visible={showReceipt} 
-                order={selectedOrder} 
-                items={orderItems} 
-                onClose={() => setShowReceipt(false)} 
+                order={receiptData?.order ?? null} 
+                items={receiptData?.items ?? []} 
+                onClose={() => {
+                    setShowReceipt(false);
+                    setReceiptData(null);
+                }} 
             />
         </View>
     );

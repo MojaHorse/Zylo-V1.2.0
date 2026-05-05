@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Pressable, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, Dimensions, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import tw from 'twrnc';
@@ -125,7 +125,22 @@ export default function LoginScreenMobile() {
                     
                     {/* Bottom Row */}
                     <View style={tw`flex-row gap-4`}>
-                        <View style={{ width: BUTTON_SIZE, height: BUTTON_SIZE }} /> 
+                        <Pressable 
+                            onPress={() => {
+                                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+                                Alert.alert(
+                                    step === 1 ? 'Forgot ID?' : 'Forgot PIN?', 
+                                    'Please ask your manager to check or reset your credentials.'
+                                );
+                            }}
+                            style={({ pressed }) => [
+                                tw`items-center justify-center rounded-full transition-all`,
+                                { width: BUTTON_SIZE, height: BUTTON_SIZE },
+                                pressed && tw`bg-slate-100 scale-95`
+                            ]}
+                        >
+                            <Text style={tw`text-slate-400 text-sm font-bold text-center`}>{step === 1 ? 'Forgot\nID?' : 'Forgot\nPIN?'}</Text>
+                        </Pressable>
                         
                         <Pressable 
                             onPress={() => onKeyPress('0')} 

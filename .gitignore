@@ -2,6 +2,7 @@
 node_modules/
 build/
 dist/
+.expo/
 
 # Ignore sensitive environment variable files
 .env

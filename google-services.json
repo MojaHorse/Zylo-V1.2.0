@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1005829860030",
+    "project_id": "zylo-d93ee",
+    "storage_bucket": "zylo-d93ee.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1005829860030:android:1757a2f31d80eb63da4cef",
+        "android_client_info": {
+          "package_name": "com.davidlichaba.zylo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4bjdAt2iKtNCgxfCvQv13nzGrzfA3n1I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

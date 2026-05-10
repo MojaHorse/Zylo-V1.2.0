@@ -10,22 +10,13 @@ import {
 } from "lucide-react-native";
 import { useInventoryLogic } from "../../hooks/useInventoryLogic";
 import InventoryFormModal from "../../../components/Modals/InventoryFormModal";
-import ManagerApprovalModal from "../../../components/Modals/ManagerApprovalModal";
+import OpsPinModal from "../../../components/Modals/OpsPinModal";
 import StockRow from "../../../components/StockRow";
 import StockTakeRow from "../../../components/StockTakeRow";
 import Header from "../../../components/Header";
 import * as Haptics from 'expo-haptics';
 
-const CATEGORY_FILTERS = ["All", "Meat", "Bread", "Veggies", "Drinks", "Packaging", "Other"];
-
-const CATEGORY_ICONS: Record<string, string> = {
-    'Meat': '#ef4444',
-    'Bread': '#f59e0b',
-    'Veggies': '#22c55e',
-    'Drinks': '#3b82f6',
-    'Packaging': '#8b5cf6',
-    'Other': '#64748b',
-};
+import { getCategoryColor } from "../../../src/utils/colors";
 
 export default function InventoryScreenTablet() {
     const {
@@ -33,13 +24,22 @@ export default function InventoryScreenTablet() {
         totalValue, criticalCount, totalItems,
         onRefresh, handleDelete, handleEdit, handleAdd, fetchInventory,
         modalVisible, setModalVisible, editingItem,
-        pinModalVisible, setPinModalVisible, handleSecureDelete, approving,
+        opsPinVisible, setOpsPinVisible, handleSecureDelete, pendingDeleteId, approving,
         isStockTakeMode, toggleStockTakeMode, stockTakeCounts, updateStockCount, commitStockTake, generateReport
     } = useInventoryLogic();
 
     // Local filter state
     const [selectedCategory, setSelectedCategory] = useState("All");
     const [sortBy, setSortBy] = useState<'name' | 'quantity' | 'status'>('name');
+
+    // Dynamic category filters based on current items
+    const dynamicCategories = useMemo(() => {
+        const cats = new Set<string>();
+        items.forEach(item => {
+            if (item.category) cats.add(item.category);
+        });
+        return ["All", ...Array.from(cats).sort()];
+    }, [items]);
 
     // Apply category filter + sort
     const displayItems = useMemo(() => {
@@ -140,10 +140,10 @@ export default function InventoryScreenTablet() {
             {/* ═══════════ CATEGORY FILTER CHIPS ═══════════ */}
             <View style={tw`px-8 mb-4`}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={tw`gap-2`}>
-                    {CATEGORY_FILTERS.map(cat => {
+                    {dynamicCategories.map(cat => {
                         const isActive = selectedCategory === cat;
                         const count = categoryCounts[cat] || 0;
-                        const chipColor = cat === 'All' ? '#4f46e5' : (CATEGORY_ICONS[cat] || '#64748b');
+                        const chipColor = cat === 'All' ? '#4f46e5' : getCategoryColor(cat);
                         
                         return (
                             <Pressable
@@ -384,11 +384,12 @@ export default function InventoryScreenTablet() {
                 initialData={editingItem}
             />
 
-            <ManagerApprovalModal
-                visible={pinModalVisible}
-                onCancel={() => setPinModalVisible(false)}
-                onApprove={handleSecureDelete}
-                loading={approving}
+            <OpsPinModal
+                visible={opsPinVisible}
+                onClose={() => setOpsPinVisible(false)}
+                actionName="Delete Item"
+                actionDescription="Enter the Operations PIN to authorize deletion"
+                onSuccess={handleSecureDelete}
             />
         </View>
     );

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, FlatList, TextInput, ActivityIndicator, Alert, Pressable } from 'react-native';
+import { View, Text, FlatList, TextInput, ActivityIndicator, Alert, Pressable, LayoutAnimation } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import tw from 'twrnc';
 import { Search, Calendar, RefreshCcw, Calculator, Grid } from 'lucide-react-native';
@@ -7,7 +7,9 @@ import { usePOSLogic } from '../../hooks/usePOSLogic';
 import ProductCard from '../../../components/ProductCard';
 import CategoryPill from '../../../components/CategoryPill';
 import OrderSummary from '../../../components/OrderSummary';
-import AddProductModal from '../../../components/Modals/AddProductModal';
+import AddItemChooserModal from '../../../components/Modals/AddItemChooserModal';
+import AddSimpleProductModal from '../../../components/Modals/AddSimpleProductModal';
+import AddRecipeProductModal from '../../../components/Modals/AddRecipeProductModal';
 import ProductCustomizationModal from '../../../components/Modals/ProductCustomizationModal';
 import CheckoutModal from '../../../components/Modals/CheckoutModal';
 import POSKeypad from '../../../components/POSKeypad';
@@ -27,6 +29,7 @@ export default function POSScreenTablet() {
 
     // Edit product state (for the 3-dot menu "Edit Product")
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+    const [addModalType, setAddModalType] = useState<'chooser' | 'simple' | 'recipe' | null>(null);
 
     return (
         <SafeAreaView style={tw`flex-1 flex-row bg-slate-50`} edges={['top', 'bottom', 'left']}>
@@ -57,7 +60,7 @@ export default function POSScreenTablet() {
                         <Pressable
                             onPress={() => {
                                 Haptics.impactAsync();
-                                setShowAddModal(true);
+                                setAddModalType('chooser');
                             }}
                             style={({ pressed }) => [
                                 tw`px-5 py-2 rounded-xl bg-indigo-600 shadow-sm items-center justify-center transition-all`,
@@ -83,6 +86,7 @@ export default function POSScreenTablet() {
                     <Pressable
                         onPress={() => {
                             Haptics.selectionAsync();
+                            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                             setIsKeypadMode(!isKeypadMode);
                         }}
                         style={({ pressed }) => [
@@ -155,11 +159,25 @@ export default function POSScreenTablet() {
             <OrderSummary onCollapsedChange={(collapsed) => setOrderCollapsed(collapsed)} onCheckoutPress={() => setShowCheckout(true)} />
 
             {/* Modals */}
-            <AddProductModal 
-                visible={showAddModal || !!editingProduct} 
-                onClose={() => { setShowAddModal(false); setEditingProduct(null); }} 
-                onSaved={() => { fetchProducts(); setEditingProduct(null); }} 
-                editProduct={editingProduct}
+            <AddItemChooserModal 
+                visible={addModalType === 'chooser'}
+                onClose={() => setAddModalType(null)}
+                onSelectSimple={() => setAddModalType('simple')}
+                onSelectRecipe={() => setAddModalType('recipe')}
+            />
+
+            <AddSimpleProductModal 
+                visible={addModalType === 'simple' || (editingProduct?.product_type === 'simple')}
+                onClose={() => { setAddModalType(null); setEditingProduct(null); }}
+                onSaved={fetchProducts}
+                editProduct={editingProduct?.product_type === 'simple' ? editingProduct : null}
+            />
+
+            <AddRecipeProductModal 
+                visible={addModalType === 'recipe' || (editingProduct?.product_type === 'recipe')}
+                onClose={() => { setAddModalType(null); setEditingProduct(null); }}
+                onSaved={fetchProducts}
+                editProduct={editingProduct?.product_type === 'recipe' ? editingProduct : null}
             />
             <ProductCustomizationModal 
                 visible={!!customizingProduct} 

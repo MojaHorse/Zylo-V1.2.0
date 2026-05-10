@@ -42,6 +42,7 @@ export interface Product {
     name: string;
     price: number;
     category: string;
+    product_type?: 'simple' | 'recipe';
     description?: string;
     image_url?: string;
     // Calculated field from 'get_menu_with_status' RPC

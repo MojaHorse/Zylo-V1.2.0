@@ -15,7 +15,8 @@ import {
 import * as Haptics from 'expo-haptics';
 
 import StaffManagerModal from '../../components/Modals/StaffManagerModal';
-import ManagerAuthModal from '../../components/Modals/ManagerAuthModal';
+import OpsPinModal from '../../components/Modals/OpsPinModal';
+import SetOpsPinModal from '../../components/Modals/SetOpsPinModal';
 import ChangePinModal from '../../components/Modals/ChangePinModal';
 
 export default function SettingsScreen() {
@@ -30,7 +31,9 @@ export default function SettingsScreen() {
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(true);
     const [showStaffModal, setShowStaffModal] = useState(false);
-    const [showManagerAuth, setShowManagerAuth] = useState(false);
+    const [showOpsAuth, setShowOpsAuth] = useState(false);
+    const [showSetOpsPin, setShowSetOpsPin] = useState(false);
+    const [hasOpsPin, setHasOpsPin] = useState(false);
     const [showChangePin, setShowChangePin] = useState(false);
 
     // Form Fields
@@ -71,6 +74,7 @@ export default function SettingsScreen() {
             setLowStockThreshold(String(data.low_stock_threshold || '10'));
             setAllowNegativeStock(data.allow_negative_stock || false);
             setBusinessDayStartsAt(data.business_day_starts_at || '00:00:00');
+            setHasOpsPin(!!data.ops_pin_hash);
         }
         setFetching(false);
     };
@@ -135,7 +139,7 @@ export default function SettingsScreen() {
                         if (canEdit) {
                             signOut();
                         } else {
-                            setShowManagerAuth(true);
+                            setShowOpsAuth(true);
                         }
                     }
                 }
@@ -329,6 +333,28 @@ export default function SettingsScreen() {
                                     onPress={() => setShowStaffModal(true)}
                                 />
 
+                                {/* Operations PIN */}
+                                <Row
+                                    icon={Shield}
+                                    label="Operations PIN"
+                                    color="#4f46e5"
+                                    value={
+                                        <View style={tw`flex-row items-center gap-2`}>
+                                            <View style={tw`px-2.5 py-1 rounded-full ${
+                                                hasOpsPin ? 'bg-emerald-50 border border-emerald-200' : 'bg-amber-50 border border-amber-200'
+                                            }`}>
+                                                <Text style={tw`text-xs font-bold ${
+                                                    hasOpsPin ? 'text-emerald-600' : 'text-amber-600'
+                                                }`}>
+                                                    {hasOpsPin ? 'Active' : 'Not Set'}
+                                                </Text>
+                                            </View>
+                                            <ChevronRight size={18} color="#94a3b8" />
+                                        </View>
+                                    }
+                                    onPress={() => setShowSetOpsPin(true)}
+                                />
+
                                 {/* Start/End Shift Button */}
                                 <Row
                                     icon={Banknote}
@@ -372,14 +398,23 @@ export default function SettingsScreen() {
 
             <StaffManagerModal visible={showStaffModal} onClose={() => setShowStaffModal(false)} />
             <ChangePinModal visible={showChangePin} onClose={() => setShowChangePin(false)} />
-            <ManagerAuthModal 
-                visible={showManagerAuth} 
-                onClose={() => setShowManagerAuth(false)} 
+            <SetOpsPinModal
+                visible={showSetOpsPin}
+                onClose={() => {
+                    setShowSetOpsPin(false);
+                    fetchSettings(); // Refresh to update hasOpsPin status
+                }}
+                hasExistingPin={hasOpsPin}
+            />
+            <OpsPinModal
+                visible={showOpsAuth}
+                onClose={() => setShowOpsAuth(false)}
                 actionName="Authorize Logout"
+                actionDescription="Enter the Operations PIN to sign out"
                 onSuccess={() => {
-                    setShowManagerAuth(false);
+                    setShowOpsAuth(false);
                     signOut();
-                }} 
+                }}
             />
 
             {/* TIME PICKER MODAL */}

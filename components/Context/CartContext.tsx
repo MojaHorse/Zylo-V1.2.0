@@ -1,6 +1,12 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+import { LayoutAnimation, UIManager, Platform } from 'react-native';
 import { Product, Modifier } from '../../types'; 
 import { useBusiness } from './BusinessContext'; 
+
+// Enable LayoutAnimation for Android
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 export type CartItem = Product & {
     quantity: number;
@@ -57,6 +63,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         let isSuccess = false;
         let msg = '';
 
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setCart((prev) => {
             const internalId = `${product.id}-${modifiers.map(m => m.id).sort().join('-')}`;
             const existing = prev.find((item) => item.internalId === internalId);
@@ -85,6 +92,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     };
 
     const removeFromCart = (internalId: string) => {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setCart((prev) => prev.filter((item) => item.internalId !== internalId));
     };
 
@@ -97,6 +105,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         let isSuccess = false;
         let msg = '';
 
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setCart((prev) => {
             const targetItem = prev.find(i => i.internalId === internalId);
             if (!targetItem) return prev;
@@ -126,6 +135,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     };
 
     const clearCart = () => {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setCart([]);
     };
 

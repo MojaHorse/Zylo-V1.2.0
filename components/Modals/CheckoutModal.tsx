@@ -12,6 +12,8 @@ import {
     ScrollView,
     Pressable,
 } from 'react-native';
+import AnimatedModalContainer from './AnimatedModalContainer';
+import AnimatedPressable from '../AnimatedPressable';
 import tw from 'twrnc';
 import {
     X,
@@ -366,7 +368,8 @@ export default function CheckoutModal({ visible, onClose }: Props) {
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={tw`flex-1 bg-slate-900/60 justify-center items-center px-5`}
             >
-                <View
+                <AnimatedModalContainer
+                    visible={visible}
                     style={tw`w-full max-w-lg rounded-[32px] overflow-hidden shadow-2xl max-h-[90%] bg-slate-50`}
                 >
                     <View
@@ -828,7 +831,7 @@ export default function CheckoutModal({ visible, onClose }: Props) {
                             </View>
                         )}
                     </ScrollView>
-                </View>
+                </AnimatedModalContainer>
             </KeyboardAvoidingView>
         </Modal>
     );

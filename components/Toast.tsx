@@ -14,20 +14,27 @@ interface ToastProps {
 
 export const Toast = ({ message, type, onHide, duration = 3000 }: ToastProps) => {
     const opacity = useRef(new Animated.Value(0)).current;
-    const translateY = useRef(new Animated.Value(50)).current;
+    const translateY = useRef(new Animated.Value(30)).current;
+    const scale = useRef(new Animated.Value(0.9)).current;
 
     useEffect(() => {
         Animated.parallel([
             Animated.timing(opacity, {
                 toValue: 1,
-                duration: 300,
+                duration: 200,
                 useNativeDriver: true,
             }),
             Animated.spring(translateY, {
                 toValue: 0,
                 useNativeDriver: true,
-                speed: 12,
-                bounciness: 5
+                speed: 20,
+                bounciness: 8
+            }),
+            Animated.spring(scale, {
+                toValue: 1,
+                useNativeDriver: true,
+                speed: 20,
+                bounciness: 8
             })
         ]).start();
 
@@ -35,12 +42,17 @@ export const Toast = ({ message, type, onHide, duration = 3000 }: ToastProps) =>
             Animated.parallel([
                 Animated.timing(opacity, {
                     toValue: 0,
-                    duration: 300,
+                    duration: 250,
                     useNativeDriver: true,
                 }),
                 Animated.timing(translateY, {
                     toValue: 20,
-                    duration: 300,
+                    duration: 250,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(scale, {
+                    toValue: 0.9,
+                    duration: 250,
                     useNativeDriver: true,
                 })
             ]).start(() => onHide());
@@ -76,7 +88,7 @@ export const Toast = ({ message, type, onHide, duration = 3000 }: ToastProps) =>
             style={[
                 tw`absolute bottom-10 left-4 right-4 bg-white border border-slate-200 p-4 rounded-2xl flex-row items-center shadow-lg z-50`,
                 { shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 8 },
-                { opacity, transform: [{ translateY }] },
+                { opacity, transform: [{ translateY }, { scale }] },
                 Platform.OS === 'web' && { maxWidth: 400, alignSelf: 'center' }
             ]}
         >

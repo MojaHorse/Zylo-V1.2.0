@@ -1,7 +1,9 @@
 import React from 'react';
 import { View, Text, TextInput, Pressable } from 'react-native';
 import tw from 'twrnc';
-import { Package, Minus, Plus } from 'lucide-react-native';
+import { Minus, Plus } from 'lucide-react-native';
+import { getCategoryIcon } from '../src/utils/icons';
+import { getCategoryColor } from '../src/utils/colors';
 import * as Haptics from 'expo-haptics';
 import type { InventoryItem } from '../types';
 
@@ -26,6 +28,9 @@ function StockTakeRow({ item, count, onUpdateCount }: StockTakeRowProps) {
         ? (hasVariance ? 'bg-amber-50/50' : 'bg-emerald-50/50')
         : 'bg-white';
 
+    const catColor = getCategoryColor(item.category);
+    const CategoryIcon = getCategoryIcon(item.category);
+
     const handleIncrement = () => {
         Haptics.selectionAsync();
         const current = count ?? currentQty;
@@ -41,8 +46,9 @@ function StockTakeRow({ item, count, onUpdateCount }: StockTakeRowProps) {
     return (
         <View style={tw`mb-3 p-4 rounded-2xl border ${borderStyle} ${bgStyle} shadow-sm flex-row items-center`}>
             {/* Icon */}
-            <View style={tw`w-11 h-11 rounded-xl items-center justify-center bg-white border border-slate-100 mr-4 shadow-sm`}>
-                <Package size={18} color="#94a3b8" />
+            <View style={[tw`w-11 h-11 rounded-xl items-center justify-center mr-4 border`,
+                { backgroundColor: catColor + '12', borderColor: catColor + '30' }]}>
+                <CategoryIcon size={18} color={catColor} />
             </View>
 
             {/* Name & Expected */}

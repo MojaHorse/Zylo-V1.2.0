@@ -24,7 +24,7 @@ export const useInventoryLogic = () => {
     const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
 
     // Security State
-    const [pinModalVisible, setPinModalVisible] = useState(false);
+    const [opsPinVisible, setOpsPinVisible] = useState(false);
     const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
     const [approving, setApproving] = useState(false);
 
@@ -98,7 +98,7 @@ export const useInventoryLogic = () => {
             performDirectDelete(id);
         } else {
             setPendingDeleteId(id);
-            setPinModalVisible(true);
+            setOpsPinVisible(true);
         }
     }, [userRole]);
 
@@ -115,20 +115,17 @@ export const useInventoryLogic = () => {
         ]);
     };
 
-    const handleSecureDelete = async (pin: string) => {
+    const handleSecureDelete = async () => {
         if (!pendingDeleteId) return;
         setApproving(true);
-        const { data, error } = await supabase.rpc('secure_inventory_delete', {
-            p_item_id: pendingDeleteId,
-            p_pin: pin
-        });
+        const { error } = await supabase.from('inventory_items').delete().eq('id', pendingDeleteId);
         setApproving(false);
 
-        if (error || !data?.success) {
-            showToast("Invalid PIN", 'error');
+        if (error) {
+            showToast("Failed to delete item", 'error');
         } else {
             setAllItems(prev => prev.filter(i => i.id !== pendingDeleteId));
-            setPinModalVisible(false);
+            setOpsPinVisible(false);
             setPendingDeleteId(null);
             showToast("Item deleted securely", 'success');
         }
@@ -212,9 +209,10 @@ export const useInventoryLogic = () => {
         modalVisible,
         setModalVisible,
         editingItem,
-        pinModalVisible,
-        setPinModalVisible,
+        opsPinVisible,
+        setOpsPinVisible,
         handleSecureDelete,
+        pendingDeleteId,
         approving,
         // Reporting
         generateReport,

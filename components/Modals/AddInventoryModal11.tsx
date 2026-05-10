@@ -11,7 +11,19 @@ import {
 import tw from "twrnc";
 import { supabase } from "../../lib/supabase";
 
-export default function AddInventoryModal({ visible, onClose, onSaved }) {
+interface Props {
+    visible: boolean;
+    onClose: () => void;
+    onSaved?: () => void;
+}
+
+interface PickerModalProps {
+    data: string[];
+    onSelect: (item: string) => void;
+    onClose: () => void;
+}
+
+export default function AddInventoryModal({ visible, onClose, onSaved }: Props) {
     const [name, setName] = useState("");
     const [category, setCategory] = useState("Meat");
     const [stock, setStock] = useState("0");
@@ -56,7 +68,7 @@ export default function AddInventoryModal({ visible, onClose, onSaved }) {
         onClose();
     };
 
-    const PickerModal = ({ data, onSelect, onClose }) => (
+    const PickerModal = ({ data, onSelect, onClose }: PickerModalProps) => (
         <Modal transparent animationType="fade">
             <Pressable
                 onPress={onClose}

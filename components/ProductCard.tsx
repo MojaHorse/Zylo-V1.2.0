@@ -4,6 +4,7 @@ import { Info, Plus, SlidersHorizontal, Trash2, MoreVertical, Pencil } from 'luc
 import tw from 'twrnc';
 import type { Product } from '../types';
 import { triggerHaptic } from '../src/utils/haptics';
+import AnimatedPressable from './AnimatedPressable';
 
 type Props = {
     product: Product;
@@ -71,16 +72,16 @@ export default function ProductCard({ product, onAdd, onEdit, onEditProduct, onI
                 {/* ⋮ MORE MENU (Top Left - Floating) */}
                 {(onDelete || onEditProduct) && (
                     <View style={tw`absolute top-2 left-2 z-30`}>
-                        <Pressable
+                        <AnimatedPressable
                             onPress={handleMenuPress}
                             style={({ pressed }) => [
                                 tw`p-2 rounded-full border`,
                                 tw`bg-white/90 border-slate-200 shadow-sm`,
-                                pressed && tw`opacity-70 scale-95`
+                                pressed && tw`opacity-70`
                             ]}
                         >
                             <MoreVertical size={16} color="#64748b" />
-                        </Pressable>
+                        </AnimatedPressable>
 
                         {/* Android/Web Dropdown Menu */}
                         {showMenu && Platform.OS !== 'ios' && (
@@ -126,16 +127,16 @@ export default function ProductCard({ product, onAdd, onEdit, onEditProduct, onI
                 )}
 
                 {/* ℹ️ INFO BUTTON (Top Right - Floating) */}
-                <Pressable
+                <AnimatedPressable
                     onPress={() => onInfoPress?.(product)}
                     style={({ pressed }) => [
                         tw`absolute top-2 right-2 p-2 rounded-full border z-20`,
                         tw`bg-white/90 border-slate-200 shadow-sm`,
-                        pressed && tw`opacity-70 scale-95`
+                        pressed && tw`opacity-70`
                     ]}
                 >
                     <Info size={16} color="#64748b" />
-                </Pressable>
+                </AnimatedPressable>
 
                 {/* ⚠️ STOCK BADGES */}
                 {isOutOfStock && (
@@ -175,18 +176,18 @@ export default function ProductCard({ product, onAdd, onEdit, onEditProduct, onI
                 {/* Buttons Row */}
                 <View style={tw`flex-row gap-2`}>
                     {/* CUSTOMIZE Button (opens customization modal for modifiers/notes) */}
-                    <Pressable
+                    <AnimatedPressable
                         onPress={() => onEdit?.(product)}
                         style={({ pressed }) => [
                             tw`w-10 h-10 rounded-xl items-center justify-center border border-slate-200 bg-slate-50`,
-                            pressed && tw`bg-slate-100 scale-95`
+                            pressed && tw`bg-slate-100`
                         ]}
                     >
                         <SlidersHorizontal size={16} color="#64748b" />
-                    </Pressable>
+                    </AnimatedPressable>
 
                     {/* ADD Button */}
-                    <Pressable
+                    <AnimatedPressable
                         onPress={() => {
                             triggerHaptic('medium');
                             onAdd(product);
@@ -196,12 +197,12 @@ export default function ProductCard({ product, onAdd, onEdit, onEditProduct, onI
                             isOutOfStock
                                 ? tw`bg-indigo-600 border border-indigo-700 rounded-xl shadow-sm opacity-80`
                                 : tw`bg-indigo-600 border border-indigo-700 rounded-xl shadow-sm`,
-                            pressed && tw`scale-95 bg-indigo-700`
+                            pressed && tw`bg-indigo-700`
                         ]}
                     >
                         <Plus size={18} color="white" strokeWidth={3} />
                         <Text style={tw`text-white font-black text-xs uppercase tracking-wider`}>Add</Text>
-                    </Pressable>
+                    </AnimatedPressable>
                 </View>
             </View>
         </View>

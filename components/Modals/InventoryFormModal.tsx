@@ -7,7 +7,7 @@ import tw from "twrnc";
 import { supabase } from "../../lib/supabase";
 import { useBusiness } from "../../components/Context/BusinessContext";
 import { useAuth } from "../../components/Context/AuthContext";
-import ManagerApprovalModal from "./ManagerApprovalModal";
+import OpsPinModal from "./OpsPinModal";
 import type { InventoryItem } from "../../types";
 import { Calculator, AlertTriangle, Trash2, X } from "lucide-react-native";
 import * as Haptics from 'expo-haptics';
@@ -18,7 +18,7 @@ const UNIT_CONVERSIONS: Record<string, { base: string; multiplier: number }> = {
     'L': { base: 'ml', multiplier: 1000 },
 };
 
-const CATEGORIES = ["Meat", "Bread", "Veggies", "Drinks", "Packaging", "Other"];
+
 const UNITS = ["Units", "Rolls", "g", "kg", "ml", "L", "Box"];
 
 interface Props {
@@ -42,7 +42,7 @@ export default function InventoryFormModal({ visible, onClose, onSaved, initialD
 
     // UI State
     const [loading, setLoading] = useState(false);
-    const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+
     const [showUnitPicker, setShowUnitPicker] = useState(false);
 
     // Security State
@@ -183,44 +183,12 @@ export default function InventoryFormModal({ visible, onClose, onSaved, initialD
         }
     };
 
-    // Option B: Secure Save (PIN Only)
-    const handleSecureSave = async (pin: string) => {
+    // Option B: Secure Save (after Ops PIN verified)
+    const handleSecureSave = async () => {
         const payload = preparePayload();
         if (!payload) return;
-
-        setApproving(true);
-        let result;
-
-        if (initialData?.id) {
-            // Update Existing (PIN Only)
-            const { data, error } = await supabase.rpc("secure_inventory_update", {
-                p_item_id: initialData.id,
-                p_updates: payload,
-                p_pin: pin
-            });
-            result = { data, error };
-        } else {
-            // Create New (PIN Only + Business ID)
-            const { data, error } = await supabase.rpc("secure_inventory_create", {
-                p_item_data: payload,
-                p_business_id: business!.id,
-                p_pin: pin
-            });
-            result = { data, error };
-        }
-
-        setApproving(false);
-
-        if (result.error || !result.data?.success) {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-            Alert.alert("Access Denied", result.data?.error || result.error?.message || "Invalid PIN");
-        } else {
-            setPinModalVisible(false);
-            // Wait for PIN modal to close before closing the main form
-            setTimeout(() => {
-                handleSuccess();
-            }, 300);
-        }
+        setPinModalVisible(false);
+        await performDirectSave(payload);
     };
 
     const handleSuccess = () => {
@@ -331,18 +299,13 @@ export default function InventoryFormModal({ visible, onClose, onSaved, initialD
                         <View style={tw`flex-row gap-4 mb-6`}>
                             <View style={tw`flex-1`}>
                                 <Text style={tw`text-slate-500 text-xs font-bold uppercase mb-2 tracking-widest ml-1`}>Category</Text>
-                                <Pressable 
-                                    onPress={() => {
-                                        Haptics.selectionAsync();
-                                        setShowCategoryPicker(true);
-                                    }} 
-                                    style={({ pressed }) => [
-                                        tw`bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-sm transition-all`,
-                                        pressed && tw`bg-slate-100`
-                                    ]}
-                                >
-                                    <Text style={tw`text-slate-900 font-bold text-base`}>{category}</Text>
-                                </Pressable>
+                                <TextInput
+                                    value={category}
+                                    onChangeText={setCategory}
+                                    style={tw`bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-sm text-slate-900 font-bold text-base`}
+                                    placeholder="e.g. Meat"
+                                    placeholderTextColor="#94a3b8"
+                                />
                             </View>
                             <View style={tw`flex-1`}>
                                 <Text style={tw`text-slate-500 text-xs font-bold uppercase mb-2 tracking-widest ml-1`}>Unit</Text>
@@ -480,15 +443,15 @@ export default function InventoryFormModal({ visible, onClose, onSaved, initialD
             </KeyboardAvoidingView>
 
             {/* Helper Modals */}
-            <PickerModal data={CATEGORIES} visible={showCategoryPicker} close={() => setShowCategoryPicker(false)} onSelect={setCategory} />
             <PickerModal data={UNITS} visible={showUnitPicker} close={() => setShowUnitPicker(false)} onSelect={setSelectedUnit} />
 
             {/* 👇 SECURITY MODAL */}
-            <ManagerApprovalModal
+            <OpsPinModal
                 visible={pinModalVisible}
-                onCancel={() => setPinModalVisible(false)}
-                onApprove={handleSecureSave}
-                loading={approving}
+                onClose={() => setPinModalVisible(false)}
+                actionName={initialData ? "Edit Inventory" : "Add Inventory"}
+                actionDescription="Enter the Operations PIN to save changes"
+                onSuccess={handleSecureSave}
             />
         </Modal>
     );

@@ -1,7 +1,8 @@
 import React from 'react';
-import { Text, Pressable } from 'react-native';
+import { Text } from 'react-native';
 import tw from 'twrnc';
 import * as Haptics from 'expo-haptics';
+import AnimatedPressable from './AnimatedPressable';
 
 interface Props {
     label: string;
@@ -16,14 +17,14 @@ export default function CategoryPill({ label, isActive, onPress }: Props) {
     };
 
     return (
-        <Pressable
+        <AnimatedPressable
             onPress={handlePress}
             style={({ pressed }) => [
                 tw`px-5 py-2.5 rounded-xl border flex-row items-center justify-center transition-all`,
                 isActive
                     ? tw`bg-indigo-600 border-indigo-700 shadow-sm`
                     : tw`bg-white border-slate-200 shadow-sm`,
-                pressed && tw`scale-95 opacity-80`
+                pressed && tw`opacity-80`
             ]}
         >
             <Text style={[
@@ -32,6 +33,6 @@ export default function CategoryPill({ label, isActive, onPress }: Props) {
             ]}>
                 {label}
             </Text>
-        </Pressable>
+        </AnimatedPressable>
     );
 }

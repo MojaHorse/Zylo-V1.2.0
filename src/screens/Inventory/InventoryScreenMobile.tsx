@@ -11,14 +11,10 @@ import { useInventoryLogic } from "../../hooks/useInventoryLogic";
 import InventoryFormModal from "../../../components/Modals/InventoryFormModal";
 import StockRow from "../../../components/StockRow";
 import StockTakeRow from "../../../components/StockTakeRow";
-import ManagerApprovalModal from "../../../components/Modals/ManagerApprovalModal";
+import OpsPinModal from "../../../components/Modals/OpsPinModal";
 import * as Haptics from 'expo-haptics';
 
-const CATEGORY_FILTERS = ["All", "Meat", "Bread", "Veggies", "Drinks", "Packaging", "Other"];
-const CATEGORY_COLORS: Record<string, string> = {
-    'Meat': '#ef4444', 'Bread': '#f59e0b', 'Veggies': '#22c55e',
-    'Drinks': '#3b82f6', 'Packaging': '#8b5cf6', 'Other': '#64748b',
-};
+import { getCategoryColor } from "../../../src/utils/colors";
 
 export default function InventoryScreenMobile() {
     const {
@@ -26,11 +22,20 @@ export default function InventoryScreenMobile() {
         totalValue, criticalCount, totalItems,
         onRefresh, handleDelete, handleEdit, handleAdd, fetchInventory,
         modalVisible, setModalVisible, editingItem,
-        pinModalVisible, setPinModalVisible, handleSecureDelete, approving,
+        opsPinVisible, setOpsPinVisible, handleSecureDelete, pendingDeleteId, approving,
         isStockTakeMode, toggleStockTakeMode, stockTakeCounts, updateStockCount, commitStockTake, generateReport
     } = useInventoryLogic();
 
     const [selectedCategory, setSelectedCategory] = useState("All");
+
+    // Dynamic category filters based on current items
+    const dynamicCategories = useMemo(() => {
+        const cats = new Set<string>();
+        items.forEach(item => {
+            if (item.category) cats.add(item.category);
+        });
+        return ["All", ...Array.from(cats).sort()];
+    }, [items]);
 
     // Category-filtered items
     const displayItems = useMemo(() => {
@@ -108,10 +113,10 @@ export default function InventoryScreenMobile() {
             {/* ═══════════ CATEGORY CHIPS ═══════════ */}
             <View style={tw`bg-white border-b border-slate-100 px-4 py-2.5`}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={tw`gap-2`}>
-                    {CATEGORY_FILTERS.map(cat => {
+                    {dynamicCategories.map(cat => {
                         const isActive = selectedCategory === cat;
                         const count = categoryCounts[cat] || 0;
-                        const chipColor = cat === 'All' ? '#4f46e5' : (CATEGORY_COLORS[cat] || '#64748b');
+                        const chipColor = cat === 'All' ? '#4f46e5' : getCategoryColor(cat);
                         return (
                             <Pressable
                                 key={cat}
@@ -262,11 +267,12 @@ export default function InventoryScreenMobile() {
                 onSaved={fetchInventory}
                 initialData={editingItem}
             />
-            <ManagerApprovalModal
-                visible={pinModalVisible}
-                onCancel={() => setPinModalVisible(false)}
-                onApprove={handleSecureDelete}
-                loading={approving}
+            <OpsPinModal
+                visible={opsPinVisible}
+                onClose={() => setOpsPinVisible(false)}
+                actionName="Delete Item"
+                actionDescription="Enter the Operations PIN to authorize deletion"
+                onSuccess={handleSecureDelete}
             />
         </View>
     );

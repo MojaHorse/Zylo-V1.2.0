@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, useWindowDimensions } from 'react-native';
 import tw from 'twrnc';
-import { AlertTriangle, CheckCircle, Package, Pencil, Trash2 } from 'lucide-react-native';
+import { AlertTriangle, CheckCircle, Pencil, Trash2 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import type { InventoryItem } from '../types';
 
@@ -11,14 +11,8 @@ interface StockRowProps {
     onDelete: (id: string) => void;
 }
 
-const CATEGORY_COLORS: Record<string, string> = {
-    'Meat': '#ef4444',
-    'Bread': '#f59e0b',
-    'Veggies': '#22c55e',
-    'Drinks': '#3b82f6',
-    'Packaging': '#8b5cf6',
-    'Other': '#64748b',
-};
+import { getCategoryColor } from '../src/utils/colors';
+import { getCategoryIcon } from '../src/utils/icons';
 
 function StockRow({ item, onEdit, onDelete }: StockRowProps) {
     const { width } = useWindowDimensions();
@@ -52,7 +46,8 @@ function StockRow({ item, onEdit, onDelete }: StockRowProps) {
         statusIconColor = '#d97706';
     }
 
-    const catColor = CATEGORY_COLORS[item.category] || CATEGORY_COLORS['Other'];
+    const catColor = getCategoryColor(item.category);
+    const CategoryIcon = getCategoryIcon(item.category);
     const costDisplay = Number(item.cost_price || 0).toFixed(2);
 
     // ═══════════ MOBILE LAYOUT ═══════════
@@ -74,7 +69,7 @@ function StockRow({ item, onEdit, onDelete }: StockRowProps) {
                     {/* Icon */}
                     <View style={[tw`w-10 h-10 rounded-xl items-center justify-center mr-3 border`,
                         { backgroundColor: catColor + '12', borderColor: catColor + '30' }]}>
-                        <Package size={16} color={catColor} />
+                        <CategoryIcon size={16} color={catColor} />
                     </View>
 
                     {/* Name & Category */}
@@ -156,7 +151,7 @@ function StockRow({ item, onEdit, onDelete }: StockRowProps) {
             <View style={[tw`w-1 h-10 rounded-full mr-3`, { backgroundColor: catColor }]} />
             <View style={[tw`w-11 h-11 rounded-xl items-center justify-center mr-3 border`,
                 { backgroundColor: catColor + '12', borderColor: catColor + '30' }]}>
-                <Package size={18} color={catColor} />
+                <CategoryIcon size={18} color={catColor} />
             </View>
             <View style={tw`flex-1 pr-3`}>
                 <Text style={tw`font-black text-base text-slate-900 tracking-tight`} numberOfLines={1}>{item.name}</Text>

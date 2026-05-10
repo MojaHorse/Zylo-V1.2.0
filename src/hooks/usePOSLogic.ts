@@ -57,7 +57,8 @@ export const usePOSLogic = () => {
                     description: d.description || '',
                     stockStatus: d.stock_status,
                     is_available: d.is_available,
-                    max_quantity: d.max_quantity
+                    max_quantity: d.max_quantity,
+                    product_type: d.product_type
                 }));
                 setProducts(normalized);
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, Pressable, LayoutAnimation, Platform, UIManager, Alert } from 'react-native';
+import AnimatedPressable from './AnimatedPressable';
 import tw from 'twrnc';
 import { useCart } from '../components/Context/CartContext';
 import { useToast } from '../components/Context/ToastContext';
@@ -103,7 +104,7 @@ export default function OrderSummary({ onCollapsedChange, onCheckoutPress }: Ord
 
     // --- VIEW 2: EXPANDED (Full Receipt) ---
     return (
-        <View style={[tw`border-l border-slate-200 flex-col shadow-xl bg-slate-50`, { width: 350 }]}>
+        <View style={[tw`border-l border-slate-200 flex-col bg-white`, { width: 360 }]}>
 
             {/* --- HEADER --- */}
             <View style={tw`p-5 border-b border-slate-200 bg-white`}>
@@ -118,15 +119,15 @@ export default function OrderSummary({ onCollapsedChange, onCheckoutPress }: Ord
                             {orderTime.toLocaleDateString()} • {orderTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </Text>
                     </View>
-                    <Pressable
+                    <AnimatedPressable
                         onPress={toggleCollapse}
                         style={({ pressed }) => [
                             tw`w-8 h-8 rounded-lg items-center justify-center border border-slate-200 bg-white shadow-sm`,
-                            pressed && tw`scale-95 bg-slate-50`
+                            pressed && tw`bg-slate-50`
                         ]}
                     >
                         <ChevronRight size={18} color="#64748b" />
-                    </Pressable>
+                    </AnimatedPressable>
                 </View>
             </View>
 
@@ -144,7 +145,7 @@ export default function OrderSummary({ onCollapsedChange, onCheckoutPress }: Ord
                     </View>
                 }
                 renderItem={({ item }) => (
-                    <View style={tw`rounded-xl mb-3 border border-slate-200 bg-white shadow-sm overflow-hidden`}>
+                    <View style={tw`rounded-xl mb-3 border border-slate-100 bg-slate-50 overflow-hidden`}>
 
                         {/* CARD BODY */}
                         <View style={tw`p-4`}>
@@ -181,7 +182,7 @@ export default function OrderSummary({ onCollapsedChange, onCheckoutPress }: Ord
                         <View style={tw`p-2 flex-row justify-between items-center border-t border-slate-100 bg-slate-50`}>
                             {/* Quantity Control */}
                             <View style={tw`flex-row items-center rounded-lg border border-slate-200 bg-white shadow-sm`}>
-                                <Pressable
+                                <AnimatedPressable
                                     onPress={() => {
                                         Haptics.selectionAsync();
                                         updateQuantity ? updateQuantity(item.internalId, item.quantity - 1) : removeFromCart(item.internalId);
@@ -192,11 +193,11 @@ export default function OrderSummary({ onCollapsedChange, onCheckoutPress }: Ord
                                     ]}
                                 >
                                     <Minus size={14} color={item.quantity === 1 ? '#ef4444' : '#0f172a'} />
-                                </Pressable>
+                                </AnimatedPressable>
 
                                 <Text style={tw`font-bold w-10 text-center text-slate-900`}>{item.quantity}</Text>
 
-                                <Pressable
+                                <AnimatedPressable
                                     onPress={() => {
                                         Haptics.selectionAsync();
                                         const res = updateQuantity(item.internalId, item.quantity + 1);
@@ -211,11 +212,11 @@ export default function OrderSummary({ onCollapsedChange, onCheckoutPress }: Ord
                                     ]}
                                 >
                                     <Plus size={14} color="#0f172a" />
-                                </Pressable>
+                                </AnimatedPressable>
                             </View>
 
                             {/* Remove Button */}
-                            <Pressable 
+                            <AnimatedPressable 
                                 onPress={() => {
                                     Haptics.impactAsync();
                                     removeFromCart(item.internalId);
@@ -223,7 +224,7 @@ export default function OrderSummary({ onCollapsedChange, onCheckoutPress }: Ord
                                 style={({ pressed }) => [tw`p-2 rounded-lg`, pressed && tw`bg-red-50`]}
                             >
                                 <Trash2 size={16} color="#ef4444" />
-                            </Pressable>
+                            </AnimatedPressable>
                         </View>
                     </View>
                 )}
@@ -251,7 +252,7 @@ export default function OrderSummary({ onCollapsedChange, onCheckoutPress }: Ord
 
                 {/* Actions */}
                 <View style={tw`flex-row gap-3`}>
-                    <Pressable
+                    <AnimatedPressable
                         onPress={() => {
                             Haptics.impactAsync();
                             clearCart();
@@ -260,19 +261,19 @@ export default function OrderSummary({ onCollapsedChange, onCheckoutPress }: Ord
                         style={({ pressed }) => [
                             tw`px-5 rounded-2xl items-center justify-center border border-slate-200 bg-white`,
                             cart.length === 0 ? tw`opacity-50` : tw`shadow-sm`,
-                            pressed && cart.length > 0 && tw`bg-red-50 border-red-200 scale-95`
+                            pressed && cart.length > 0 && tw`bg-red-50 border-red-200`
                         ]}
                     >
                         <Trash2 size={20} color={cart.length === 0 ? '#94a3b8' : '#ef4444'} />
-                    </Pressable>
+                    </AnimatedPressable>
 
-                    <Pressable
+                    <AnimatedPressable
                         onPress={handlePayNow}
                         disabled={cart.length === 0 || isValidating}
                         style={({ pressed }) => [
                             tw`flex-1 h-14 rounded-2xl flex-row items-center justify-center gap-2`,
                             (cart.length === 0 || isValidating) ? tw`bg-slate-100` : tw`bg-indigo-600 shadow-sm`,
-                            pressed && cart.length > 0 && tw`scale-95 bg-indigo-700`
+                            pressed && cart.length > 0 && tw`bg-indigo-700`
                         ]}
                     >
                         <CreditCard size={20} color={cart.length === 0 ? "#94a3b8" : "white"} strokeWidth={2.5} />
@@ -280,7 +281,7 @@ export default function OrderSummary({ onCollapsedChange, onCheckoutPress }: Ord
                             tw`font-bold text-lg uppercase tracking-wider`,
                             cart.length === 0 ? tw`text-slate-400` : tw`text-white`
                         ]}>{isValidating ? 'Checking...' : 'Pay Now'}</Text>
-                    </Pressable>
+                    </AnimatedPressable>
                 </View>
             </View>
         </View>

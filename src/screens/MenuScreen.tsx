@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TextInput, Alert, Modal, ActivityIndicator, Pressable } from 'react-native';
+import { View, Text, FlatList, TextInput, Alert, ActivityIndicator, Pressable } from 'react-native';
 import tw from 'twrnc';
-import { Plus, ChefHat, Trash2, X, Eye, EyeOff, RotateCcw, Box } from 'lucide-react-native';
+import { Eye, EyeOff, RotateCcw, Box, Edit2, Trash2 } from 'lucide-react-native';
 import { supabase } from '../../lib/supabase';
 import { useBusiness } from '../../components/Context/BusinessContext';
 import * as Haptics from 'expo-haptics';
+import AddSimpleProductModal from '../../components/Modals/AddSimpleProductModal';
+import AddRecipeProductModal from '../../components/Modals/AddRecipeProductModal';
 
 export default function MenuScreen() {
     const { selectedBusiness } = useBusiness();
@@ -19,8 +21,7 @@ export default function MenuScreen() {
 
     // Modal State
     const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [ingredients, setIngredients] = useState<any[]>([]);
+    const [editModalType, setEditModalType] = useState<'simple' | 'recipe' | null>(null);
 
     useEffect(() => {
         if (selectedBusiness) fetchData();
@@ -92,35 +93,10 @@ export default function MenuScreen() {
         ]);
     };
 
-    // Recipe Logic
-    const handleEditRecipe = async (product: any) => {
+    // Edit Logic
+    const handleEditProduct = (product: any) => {
         setSelectedProduct(product);
-        const { data } = await supabase.from('product_ingredients').select('*, inventory_items(name, unit)').eq('product_id', product.id);
-        setIngredients(data || []);
-        setIsModalOpen(true);
-    };
-
-    const addIngredient = async (inventoryItemId: string) => {
-        if (!selectedProduct || !selectedBusiness) return;
-        const { error } = await supabase.from('product_ingredients').insert({
-            business_id: selectedBusiness.id,
-            product_id: selectedProduct.id,
-            inventory_item_id: inventoryItemId,
-            quantity_required: 1
-        });
-        if (!error) handleEditRecipe(selectedProduct);
-    };
-
-    const updateQuantity = async (id: string, newQty: string) => {
-        const qty = parseFloat(newQty);
-        if (isNaN(qty)) return;
-        await supabase.from('product_ingredients').update({ quantity_required: qty }).eq('id', id);
-        setIngredients(prev => prev.map(i => i.id === id ? { ...i, quantity_required: qty } : i));
-    };
-
-    const removeIngredient = async (id: string) => {
-        await supabase.from('product_ingredients').delete().eq('id', id);
-        setIngredients(prev => prev.filter(i => i.id !== id));
+        setEditModalType(product.product_type === 'recipe' ? 'recipe' : 'simple');
     };
 
     return (
@@ -189,14 +165,14 @@ export default function MenuScreen() {
                                 <Pressable
                                     onPress={() => {
                                         Haptics.selectionAsync();
-                                        handleEditRecipe(item);
+                                        handleEditProduct(item);
                                     }}
                                     style={({ pressed }) => [
                                         tw`p-2.5 rounded-xl border border-slate-200 bg-white shadow-sm transition-all`,
                                         pressed && tw`scale-95 bg-slate-50`
                                     ]}
                                 >
-                                    <ChefHat size={18} color="#4f46e5" />
+                                    <Edit2 size={18} color="#4f46e5" />
                                 </Pressable>
 
                                 {item.is_available ? (
@@ -248,67 +224,19 @@ export default function MenuScreen() {
                 />
             )}
 
-            {/* Recipe Modal */}
-            <Modal visible={isModalOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setIsModalOpen(false)}>
-                <View style={tw`flex-1 bg-slate-50 p-6`}>
-                    <View style={tw`flex-row justify-between items-center mb-8`}>
-                        <Text style={tw`text-slate-900 text-2xl font-black tracking-tight`}>Edit: {selectedProduct?.name}</Text>
-                        <Pressable
-                            onPress={() => setIsModalOpen(false)}
-                            style={({ pressed }) => [
-                                tw`w-10 h-10 rounded-full items-center justify-center border border-slate-200 bg-white shadow-sm transition-all`,
-                                pressed && tw`scale-95 bg-slate-50`
-                            ]}
-                        >
-                            <X size={20} color="#64748b" />
-                        </Pressable>
-                    </View>
+            <AddSimpleProductModal 
+                visible={editModalType === 'simple'}
+                onClose={() => { setEditModalType(null); setSelectedProduct(null); }}
+                onSaved={fetchData}
+                editProduct={selectedProduct}
+            />
 
-                    <Text style={tw`text-slate-500 mb-4 uppercase text-xs font-bold tracking-widest`}>Ingredients Used</Text>
-                    <View style={tw`gap-3`}>
-                        {ingredients.map((ing) => (
-                            <View key={ing.id} style={tw`flex-row items-center bg-white p-4 rounded-2xl border border-slate-200 shadow-sm`}>
-                                <Text style={tw`flex-1 text-slate-900 font-bold`}>{ing.inventory_items?.name}</Text>
-                                <TextInput
-                                    style={tw`bg-slate-50 text-slate-900 w-16 p-2 rounded-xl text-center border border-slate-200 mr-3 font-bold`}
-                                    value={String(ing.quantity_required)}
-                                    keyboardType="numeric"
-                                    onChangeText={(val) => updateQuantity(ing.id, val)}
-                                />
-                                <Text style={tw`text-slate-400 text-xs w-12 font-medium`}>{ing.inventory_items?.unit}</Text>
-                                <Pressable
-                                    onPress={() => removeIngredient(ing.id)}
-                                    style={({ pressed }) => [tw`p-1`, pressed && tw`opacity-50`]}
-                                >
-                                    <Trash2 size={18} color="#ef4444" />
-                                </Pressable>
-                            </View>
-                        ))}
-                    </View>
-
-                    <Text style={tw`text-slate-500 mt-8 mb-4 uppercase text-xs font-bold tracking-widest`}>Add Ingredient</Text>
-                    <FlatList
-                        data={inventory}
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        renderItem={({ item }) => (
-                            <Pressable
-                                onPress={() => {
-                                    Haptics.selectionAsync();
-                                    addIngredient(item.id);
-                                }}
-                                style={({ pressed }) => [
-                                    tw`bg-white p-3 rounded-xl mr-2 border border-slate-200 shadow-sm items-center transition-all`,
-                                    pressed && tw`scale-95 bg-indigo-50 border-indigo-200`
-                                ]}
-                            >
-                                <Plus size={20} color="#4f46e5" style={tw`mb-1`} />
-                                <Text style={tw`text-slate-900 text-xs font-bold`}>{item.name}</Text>
-                            </Pressable>
-                        )}
-                    />
-                </View>
-            </Modal>
+            <AddRecipeProductModal 
+                visible={editModalType === 'recipe'}
+                onClose={() => { setEditModalType(null); setSelectedProduct(null); }}
+                onSaved={fetchData}
+                editProduct={selectedProduct}
+            />
         </View>
     );
 }

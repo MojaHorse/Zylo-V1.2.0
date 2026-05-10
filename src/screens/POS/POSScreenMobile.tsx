@@ -6,7 +6,9 @@ import { usePOSLogic } from '../../hooks/usePOSLogic';
 import ProductCard from '../../../components/ProductCard';
 import CategoryPill from '../../../components/CategoryPill';
 import OrderSummaryMobile from '../../../components/OrderSummaryMobile';
-import AddProductModal from '../../../components/Modals/AddProductModal';
+import AddItemChooserModal from '../../../components/Modals/AddItemChooserModal';
+import AddSimpleProductModal from '../../../components/Modals/AddSimpleProductModal';
+import AddRecipeProductModal from '../../../components/Modals/AddRecipeProductModal';
 import ProductCustomizationModal from '../../../components/Modals/ProductCustomizationModal';
 import CheckoutModal from '../../../components/Modals/CheckoutModal';
 import { ProductCardSkeleton } from '../../../components/Skeletons/ProductCardSkeleton';
@@ -23,6 +25,8 @@ export default function POSScreenMobile() {
         customizingProduct, setCustomizingProduct, addToCart,
         isKeypadMode, setIsKeypadMode, customAmount, setCustomAmount, handleAddCustomAmount
     } = usePOSLogic();
+
+    const [addModalType, setAddModalType] = useState<'chooser' | 'simple' | 'recipe' | null>(null);
 
     // Edit product state (for the 3-dot menu "Edit Product")
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -59,7 +63,7 @@ export default function POSScreenMobile() {
                         <Pressable
                             onPress={() => {
                                 Haptics.impactAsync();
-                                setShowAddModal(true);
+                                setAddModalType('chooser');
                             }}
                             style={({ pressed }) => [
                                 tw`px-4 py-2 rounded-full bg-indigo-600 items-center justify-center shadow-sm transition-all`,
@@ -223,12 +227,27 @@ export default function POSScreenMobile() {
                 </View>
             </Modal>
 
-            <AddProductModal 
-                visible={showAddModal || !!editingProduct} 
-                onClose={() => { setShowAddModal(false); setEditingProduct(null); }} 
-                onSaved={() => { fetchProducts(); setEditingProduct(null); }} 
-                editProduct={editingProduct}
+            <AddItemChooserModal 
+                visible={addModalType === 'chooser'}
+                onClose={() => setAddModalType(null)}
+                onSelectSimple={() => setAddModalType('simple')}
+                onSelectRecipe={() => setAddModalType('recipe')}
             />
+
+            <AddSimpleProductModal 
+                visible={addModalType === 'simple' || (editingProduct?.product_type === 'simple')}
+                onClose={() => { setAddModalType(null); setEditingProduct(null); }}
+                onSaved={fetchProducts}
+                editProduct={editingProduct?.product_type === 'simple' ? editingProduct : null}
+            />
+
+            <AddRecipeProductModal 
+                visible={addModalType === 'recipe' || (editingProduct?.product_type === 'recipe')}
+                onClose={() => { setAddModalType(null); setEditingProduct(null); }}
+                onSaved={fetchProducts}
+                editProduct={editingProduct?.product_type === 'recipe' ? editingProduct : null}
+            />
+
             <ProductCustomizationModal 
                 visible={!!customizingProduct} 
                 product={customizingProduct} 

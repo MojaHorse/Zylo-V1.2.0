@@ -7,6 +7,8 @@ import tw from 'twrnc';
 import { X, Save, Tag, Box, Plus, Trash2 } from 'lucide-react-native';
 import { supabase } from '../../lib/supabase';
 import { useBusiness } from '../Context/BusinessContext';
+import { useAuth } from '../Context/AuthContext';
+import OpsPinModal from './OpsPinModal';
 
 interface InventoryItem {
   id: string;
@@ -48,6 +50,10 @@ export default function AddSimpleProductModal({ visible, onClose, onSaved, editP
 
   // Picker
   const [showPicker, setShowPicker] = useState(false);
+
+  // Security
+  const { role } = useAuth();
+  const [pinModalVisible, setPinModalVisible] = useState(false);
 
   useEffect(() => {
     if (visible && business) {
@@ -96,6 +102,17 @@ export default function AddSimpleProductModal({ visible, onClose, onSaved, editP
       setLinkedInventoryId(ingData[0].inventory_item_id);
     } else {
       setLinkedInventoryId(null);
+    }
+  };
+
+  const handleSaveAttempt = () => {
+    if (isSubmitting.current) return;
+    if (!name || !price || !business) return Alert.alert("Required", "Name and Price are required.");
+
+    if (role === 'owner' || role === 'manager') {
+        handleSave();
+    } else {
+        setPinModalVisible(true);
     }
   };
 
@@ -185,6 +202,7 @@ export default function AddSimpleProductModal({ visible, onClose, onSaved, editP
   };
 
   return (
+    <React.Fragment>
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={tw`flex-1`}>
         <View style={tw`flex-1 bg-slate-900/60 justify-end sm:justify-center items-center p-4 sm:p-0`}>
@@ -327,7 +345,7 @@ export default function AddSimpleProductModal({ visible, onClose, onSaved, editP
             <View style={tw`p-6 border-t border-slate-100 bg-white`}>
               <TouchableOpacity 
                 style={tw`w-full bg-indigo-600 p-4 rounded-2xl items-center flex-row justify-center shadow-md ${loading ? 'opacity-70' : ''}`}
-                onPress={handleSave}
+                onPress={handleSaveAttempt}
                 disabled={loading}
               >
                 {loading ? <ActivityIndicator color="white" /> : (
@@ -375,5 +393,18 @@ export default function AddSimpleProductModal({ visible, onClose, onSaved, editP
       </Modal>
 
     </Modal>
+
+    {/* Security Modal */}
+    <OpsPinModal
+        visible={pinModalVisible}
+        onClose={() => setPinModalVisible(false)}
+        actionName={isEditMode ? "Edit Product" : "Add Product"}
+        actionDescription="Enter the Operations PIN to save changes"
+        onSuccess={() => {
+            setPinModalVisible(false);
+            handleSave();
+        }}
+    />
+    </React.Fragment>
   );
 }

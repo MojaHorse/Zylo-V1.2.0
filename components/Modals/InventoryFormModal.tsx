@@ -257,6 +257,7 @@ export default function InventoryFormModal({ visible, onClose, onSaved, initialD
     );
 
     return (
+        <React.Fragment>
         <Modal visible={visible} animationType="slide" transparent>
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -444,15 +445,16 @@ export default function InventoryFormModal({ visible, onClose, onSaved, initialD
 
             {/* Helper Modals */}
             <PickerModal data={UNITS} visible={showUnitPicker} close={() => setShowUnitPicker(false)} onSelect={setSelectedUnit} />
-
-            {/* 👇 SECURITY MODAL */}
-            <OpsPinModal
-                visible={pinModalVisible}
-                onClose={() => setPinModalVisible(false)}
-                actionName={initialData ? "Edit Inventory" : "Add Inventory"}
-                actionDescription="Enter the Operations PIN to save changes"
-                onSuccess={handleSecureSave}
-            />
         </Modal>
+
+        {/* 👇 SECURITY MODAL MOVED OUTSIDE */}
+        <OpsPinModal
+            visible={pinModalVisible}
+            onClose={() => setPinModalVisible(false)}
+            actionName={initialData ? "Edit Inventory" : "Add Inventory"}
+            actionDescription="Enter the Operations PIN to save changes"
+            onSuccess={handleSecureSave}
+        />
+        </React.Fragment>
     );
 }

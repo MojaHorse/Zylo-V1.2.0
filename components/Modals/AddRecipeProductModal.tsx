@@ -7,6 +7,8 @@ import tw from 'twrnc';
 import { X, Save, ChefHat, Plus, Trash2, ArrowRight } from 'lucide-react-native';
 import { supabase } from '../../lib/supabase';
 import { useBusiness } from '../Context/BusinessContext';
+import { useAuth } from '../Context/AuthContext';
+import OpsPinModal from './OpsPinModal';
 
 interface InventoryItem {
   id: string;
@@ -71,6 +73,10 @@ export default function AddRecipeProductModal({ visible, onClose, onSaved, editP
 
   // Picker
   const [showPicker, setShowPicker] = useState(false);
+
+  // Security
+  const { role } = useAuth();
+  const [pinModalVisible, setPinModalVisible] = useState(false);
 
   useEffect(() => {
     if (visible && business) {
@@ -142,6 +148,18 @@ export default function AddRecipeProductModal({ visible, onClose, onSaved, editP
       totalCost += (qty * conversionRatio * ing.cost_price);
     });
     return totalCost;
+  };
+
+  const handleSaveAttempt = () => {
+    if (isSubmitting.current) return;
+    if (!name || !price || !business) return Alert.alert("Required", "Name and Price are required.");
+    if (ingredients.length === 0) return Alert.alert("Required", "A recipe must have at least one ingredient.");
+
+    if (role === 'owner' || role === 'manager') {
+        handleSave();
+    } else {
+        setPinModalVisible(true);
+    }
   };
 
   const handleSave = async () => {
@@ -230,6 +248,7 @@ export default function AddRecipeProductModal({ visible, onClose, onSaved, editP
   const margin = parseFloat(price) > 0 ? ((parseFloat(price) - cost) / parseFloat(price)) * 100 : 0;
 
   return (
+    <React.Fragment>
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={tw`flex-1`}>
         <View style={tw`flex-1 bg-slate-900/60 justify-end sm:justify-center items-center p-4 sm:p-0`}>
@@ -431,7 +450,7 @@ export default function AddRecipeProductModal({ visible, onClose, onSaved, editP
             <View style={tw`p-6 border-t border-slate-100 bg-white`}>
               <TouchableOpacity 
                 style={tw`w-full bg-orange-600 p-4 rounded-2xl items-center flex-row justify-center shadow-md ${loading ? 'opacity-70' : ''}`}
-                onPress={handleSave}
+                onPress={handleSaveAttempt}
                 disabled={loading}
               >
                 {loading ? <ActivityIndicator color="white" /> : (
@@ -490,5 +509,18 @@ export default function AddRecipeProductModal({ visible, onClose, onSaved, editP
       </Modal>
 
     </Modal>
+
+    {/* Security Modal */}
+    <OpsPinModal
+        visible={pinModalVisible}
+        onClose={() => setPinModalVisible(false)}
+        actionName={isEditMode ? "Edit Recipe" : "Add Recipe"}
+        actionDescription="Enter the Operations PIN to save changes"
+        onSuccess={() => {
+            setPinModalVisible(false);
+            handleSave();
+        }}
+    />
+    </React.Fragment>
   );
 }

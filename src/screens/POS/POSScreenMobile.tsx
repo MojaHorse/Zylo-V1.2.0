@@ -235,10 +235,10 @@ export default function POSScreenMobile() {
             />
 
             <AddSimpleProductModal 
-                visible={addModalType === 'simple' || (editingProduct?.product_type === 'simple')}
+                visible={addModalType === 'simple' || !!(editingProduct && editingProduct.product_type !== 'recipe')}
                 onClose={() => { setAddModalType(null); setEditingProduct(null); }}
                 onSaved={fetchProducts}
-                editProduct={editingProduct?.product_type === 'simple' ? editingProduct : null}
+                editProduct={(editingProduct && editingProduct.product_type !== 'recipe') ? editingProduct : null}
             />
 
             <AddRecipeProductModal 
